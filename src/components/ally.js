@@ -522,6 +522,10 @@ export default function ally(allyOptions = {}) {
     Ally.propTypes = {
       store: storeShape
     };
+    // Mainly for testing purposes.
+    Ally.resetInstanceNumber = function resetInstanceNumber() {
+      instanceNumber = 1;
+    };
 
     if (process.env.NODE_ENV !== 'production') {
       Ally.prototype.componentWillUpdate = function componentWillUpdate() {
