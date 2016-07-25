@@ -1,6 +1,6 @@
 {
   "name": "react-redux-ally",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ally pattern for react-redux",
   "main": "./lib/index.js",
   "scripts": {
