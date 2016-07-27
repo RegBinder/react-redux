@@ -251,7 +251,7 @@ export default function ally(allyOptions = {}) {
         return allyProps;
       }
 
-      configureFieldsForAlly() {
+      configureFieldsForAlly(store) {
         if (this.fields) {
           return this.fields;
         }
@@ -310,10 +310,10 @@ export default function ally(allyOptions = {}) {
               field.defaultGetter;
           if (!readonly) {
             field.defaultSetter = value => {
-              return wrapActionCreators(allySet(field.finalPath, value))
+              return store.dispatch(allySet(field.finalPath, value))
             };
             field.finalSetter = doesSetterDependOnInstance && (value => {
-                  return setter.call(this.allyInstanceData, value, field.defaultSetter);
+                  return store.dispatch(setter.call(this.allyInstanceData, value, field.defaultSetter));
                 }) ||
                 field.defaultSetter;
             field.setterName = `set${name[0].toUpperCase()}${name.slice(1)}`;
@@ -344,7 +344,7 @@ export default function ally(allyOptions = {}) {
       }
 
       updateAllyPropsIfNeeded() {
-        const nextAllyProps = this.computeAllyProps();
+        const nextAllyProps = this.computeAllyProps(this.store);
         if (this.allyProps && shallowEqual(nextAllyProps, this.allyProps)) {
           return false;
         }
