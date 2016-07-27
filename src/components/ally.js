@@ -251,10 +251,11 @@ export default function ally(allyOptions = {}) {
         return allyProps;
       }
 
-      configureFieldsForAlly(store) {
+      configureFieldsForAlly() {
         if (this.fields) {
           return this.fields;
         }
+        const store = this.store;
         const instanceFields = {...fields};
         for (const fieldName of Object.keys(instanceFields)) {
           const field = instanceFields[fieldName];
