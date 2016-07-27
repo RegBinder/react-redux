@@ -61,8 +61,9 @@ export default function ally(allyOptions = {}) {
   };
   allyOptions = Object.assign({}, defaultAllyOptions, allyOptions);
   const {fields, mapStateToProps, mapDispatchToProps, mergeProps, options} = allyOptions;
-
-  const shouldSubscribe = Boolean(mapStateToProps || fields.length > 0);
+  const hasAllyFields = typeof fields === 'object'
+      && fields && Object.keys(fields).length > 0;
+  const shouldSubscribe = Boolean(mapStateToProps || hasAllyFields);
   const mapState = mapStateToProps || defaultMapStateToProps;
 
   let mapDispatch;
@@ -78,7 +79,10 @@ export default function ally(allyOptions = {}) {
   const { pure = true, withRef = false } = options;
   const checkMergedEquals = pure && finalMergeProps !== defaultMergeProps;
 
-  sanitizeFields(fields);
+  if (hasAllyFields) {
+    sanitizeFields(fields);
+  }
+
 
   // Helps track hot reloading.
   const version = nextVersion++;
@@ -306,7 +310,7 @@ export default function ally(allyOptions = {}) {
               field.defaultGetter;
           if (!readonly) {
             field.defaultSetter = value => {
-              return dispatch => dispatch(allySet(field.finalPath, value))
+              return wrapActionCreators(allySet(field.finalPath, value))
             };
             field.finalSetter = doesSetterDependOnInstance && (value => {
                   return setter.call(this.allyInstanceData, value, field.defaultSetter);
@@ -418,7 +422,7 @@ export default function ally(allyOptions = {}) {
           return
         }
 
-        if (pure && !this.doStatePropsDependOnOwnProps) {
+        if (pure && !this.doStatePropsDependOnOwnProps && !hasAllyFields) {
           const haveStatePropsChanged = tryCatch(this.updateStatePropsIfNeeded, this)
           if (!haveStatePropsChanged) {
             return
@@ -450,7 +454,6 @@ export default function ally(allyOptions = {}) {
           statePropsPrecalculationError,
           renderedElement
         } = this
-        const fieldsNotYetDefined = !this.fields && withRef;
 
         this.haveOwnPropsChanged = false
         this.hasStoreStateChanged = false
