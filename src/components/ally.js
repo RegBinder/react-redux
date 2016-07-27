@@ -315,7 +315,7 @@ export default function ally(allyOptions = {}) {
             field.finalSetter = doesSetterDependOnInstance && (value => {
                   return setter.call(this.allyInstanceData, value, field.defaultSetter);
                 }) ||
-                field.defaultGetter;
+                field.defaultSetter;
             field.setterName = `set${name[0].toUpperCase()}${name.slice(1)}`;
           }
         }
