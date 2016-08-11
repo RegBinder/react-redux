@@ -2538,7 +2538,10 @@ describe('React', () => {
         fields: {
           foo: {
             setter: function (value) {
-              setterSpy(value);
+              return {
+                type: 'action',
+                value: setterSpy(value)
+              };
             }
           }
         }
@@ -2581,6 +2584,10 @@ describe('React', () => {
           foo: {
             setter: function (value, _defaultSetter) {
               defaultSetter = _defaultSetter;
+              return {
+                type: 'Action',
+                payload: 'whatever'
+              }
             }
           }
         }
@@ -2622,7 +2629,11 @@ describe('React', () => {
         fields: {
           foo: {
             setter: function (value, defaultGetter) {
-              context = this
+              context = this;
+              return {
+                type: 'Action',
+                payload: 'whatever'
+              }
             }
           }
         }
@@ -2647,7 +2658,63 @@ describe('React', () => {
       expect(context.props).toBeA("object");
       expect(context.state).toBeA("object");
       expect(context.dispatch).toBeA("function");
+    });
+    
+    it('should have an event handler that can execute the setter for an event', function () {
+      let calledWith = null;
+      let eventHandlerCalled = false;
+      const valueToReturn = {
+          type: 'ACTION',
+          payload: 'Jim'
+        };
+      const setterStub = function (value) {
+        calledWith = value;
+        return valueToReturn
+      };
+
+      const eventHandler = function (e) {
+        eventHandlerCalled = true;
+        return e.target.value;
+      };
+      
+      @ally({
+        fields: {
+          foo: {
+            setter: setterStub
+          }
+        }
+      })
+      class Container extends Component {
+        render() {
+          return <input name="test" value={this.props.foo} 
+                        onChange={this.props.createEventHandler('foo', eventHandler)}/>
+        }
+      }
+      
+      const store = createStore(() => ({
+        'Container': {
+          'instances': {
+            '1': {
+              foo: 'yes'
+            }
+          }
+        }
+      }))
+
+    
+      const container = TestUtils.renderIntoDocument(
+          <ProviderMock store={store}>
+            <Container />
+          </ProviderMock>
+      )
+    
+      const input = TestUtils.findRenderedDOMComponentWithTag(container, 'input');
+      TestUtils.Simulate.change(input, {target: {value: 'Jim'}});
+      expect(calledWith).toBe('Jim');
+      expect(eventHandlerCalled).toBe(true);
     })
+    
+    
     //END ALLY-RELATED TESTS
   })
 })
