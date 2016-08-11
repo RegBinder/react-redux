@@ -3,7 +3,8 @@ import React, { createClass, Children, PropTypes, Component } from 'react'
 import ReactDOM from 'react-dom'
 import TestUtils from 'react-addons-test-utils'
 import { createStore } from 'redux'
-import { ally } from '../../src/index'
+import { ally, reducer } from '../../src/index'
+
 
 describe('React', () => {
   describe('ally', () => {
@@ -2531,7 +2532,7 @@ describe('React', () => {
           }
         }
       }))
-      
+
       const setterSpy = expect.createSpy();
 
       @ally({
@@ -2550,7 +2551,7 @@ describe('React', () => {
         componentDidMount() {
           this.props.setFoo('someValue');
         }
-        
+
         render() {
           return <Passthrough {...this.props}/>;
         }
@@ -2576,7 +2577,7 @@ describe('React', () => {
           }
         }
       }))
-      
+
       var defaultSetter;
 
       @ally({
@@ -2596,7 +2597,7 @@ describe('React', () => {
         componentDidMount() {
           this.props.setFoo();
         }
-        
+
         render() {
           return <Passthrough {...this.props}/>;
         }
@@ -2642,7 +2643,7 @@ describe('React', () => {
         componentDidMount() {
           this.props.setFoo('someValue');
         }
-        
+
         render() {
           return <Passthrough {...this.props}/>;
         }
@@ -2659,7 +2660,7 @@ describe('React', () => {
       expect(context.state).toBeA("object");
       expect(context.dispatch).toBeA("function");
     });
-    
+
     it('should have an event handler that can execute the setter for an event', function () {
       let calledWith = null;
       let eventHandlerCalled = false;
@@ -2676,7 +2677,7 @@ describe('React', () => {
         eventHandlerCalled = true;
         return e.target.value;
       };
-      
+
       @ally({
         fields: {
           foo: {
@@ -2686,11 +2687,11 @@ describe('React', () => {
       })
       class Container extends Component {
         render() {
-          return <input name="test" value={this.props.foo} 
+          return <input name="test" value={this.props.foo}
                         onChange={this.props.createEventHandler('foo', eventHandler)}/>
         }
       }
-      
+
       const store = createStore(() => ({
         'Container': {
           'instances': {
@@ -2701,20 +2702,99 @@ describe('React', () => {
         }
       }))
 
-    
+
       const container = TestUtils.renderIntoDocument(
           <ProviderMock store={store}>
             <Container />
           </ProviderMock>
       )
-    
+
       const input = TestUtils.findRenderedDOMComponentWithTag(container, 'input');
       TestUtils.Simulate.change(input, {target: {value: 'Jim'}});
       expect(calledWith).toBe('Jim');
       expect(eventHandlerCalled).toBe(true);
     })
-    
-    
+
+    it('should use the correct instanceNumber when calling the defaultGetter', function () {
+      const store = createStore((state = {
+            'Container': {
+              'instances': {
+                '1': {
+                  foo: 'yes1'
+                },
+                '2': {
+                  foo: 'yes2'
+                },
+                '3': {
+                  foo: 'yes3'
+                },
+                '4': {
+                  foo: 'yes4'
+                },
+                '5': {
+                  foo: 'yes5'
+                }
+              }
+            }
+          }, action) => {
+        if (!action || action.type !== 'ALLY_SET') {
+          return state;
+        }
+        return reducer(state, action);
+      })
+
+      class Container extends Component {
+          render() {
+            return <button>{this.props.foo}</button>
+          }
+      }
+
+      const AllyContainer = ally({
+        fields: {
+          foo: {
+            type: 'instance'
+          }
+        },
+        options: {
+          withRef: true
+        }
+      })(Container);
+
+      const provider = (
+          <ProviderMock store={store}>
+            <div>
+              <AllyContainer />
+              <AllyContainer />
+              <AllyContainer />
+              <AllyContainer />
+              <AllyContainer />
+            </div>
+          </ProviderMock>
+      );
+
+      const rendering = TestUtils.renderIntoDocument(provider);
+      const containers = TestUtils.scryRenderedComponentsWithType(rendering, AllyContainer);
+      const elements = containers.map(c => c.getWrappedInstance());
+      const [element1, element2, element3, element4, element5] = elements;
+      expect(element1.props.foo).toEqual('yes1');
+      expect(element2.props.foo).toEqual('yes2');
+      expect(element3.props.foo).toEqual('yes3');
+      expect(element4.props.foo).toEqual('yes4');
+      expect(element5.props.foo).toEqual('yes5');
+
+      element1.props.setFoo('no1');
+      element2.props.setFoo('no2');
+      element3.props.setFoo('no3');
+      element4.props.setFoo('no4');
+      element5.props.setFoo('no5');
+
+      expect(element1.props.foo).toEqual('no1');
+      expect(element2.props.foo).toEqual('no2');
+      expect(element3.props.foo).toEqual('no3');
+      expect(element4.props.foo).toEqual('no4');
+      expect(element5.props.foo).toEqual('no5');
+
+    })
     //END ALLY-RELATED TESTS
   })
 })

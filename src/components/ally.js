@@ -8,6 +8,7 @@ import allySet from '../actions/set'
 import isPlainObject from 'lodash/isPlainObject'
 import noop from 'lodash/noop'
 import lodashGet from 'lodash/get'
+import cloneDeep from 'lodash/cloneDeep'
 import hoistStatics from 'hoist-non-react-statics'
 import invariant from 'invariant'
 
@@ -265,7 +266,7 @@ export default function ally(allyOptions = {}) {
           return this.fields
         }
         const store = this.store
-        const instanceFields = {...fields}
+        const instanceFields = cloneDeep(fields)
         for (const fieldName of Object.keys(instanceFields)) {
           const field = instanceFields[fieldName]
           const {
