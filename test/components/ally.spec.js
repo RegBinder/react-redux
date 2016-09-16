@@ -2795,6 +2795,47 @@ describe('React', () => {
       expect(element5.props.foo).toEqual('no5');
 
     })
+
+    it('allow fields to be defined as a function to remain a context', function () {
+      const store = createStore(() => ({
+        'Container': {
+          'instances': {
+            '1': {
+              foo: 'yes',
+              bar: 'no'
+            }
+          }
+        }
+      }))
+
+      @ally({fields: function () {
+        let someOtherFooValue = 'one-beep'
+        let someOtherBarValue = 'two-beeps'
+        return {
+          foo: {
+            getter: function () { return someOtherFooValue }
+          },
+          bar: {
+            getter: function () { return someOtherBarValue }
+          }
+        };
+      }})
+      class Container extends Component {
+        render() {
+          return <Passthrough {...this.props}/>;
+        }
+      }
+
+      const container = TestUtils.renderIntoDocument(
+        <ProviderMock store={store}>
+          <Container pass="through" baz={50} />
+        </ProviderMock>
+      )
+      const stub = TestUtils.findRenderedComponentWithType(container, Passthrough)
+      expect(stub.props).toIncludeKeys(['foo', 'bar']);
+      expect(stub.props.foo).toEqual('one-beep');
+      expect(stub.props.bar).toEqual('two-beeps');
+    })
     //END ALLY-RELATED TESTS
   })
 })

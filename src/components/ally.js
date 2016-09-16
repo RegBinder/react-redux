@@ -59,7 +59,15 @@ export default function ally(allyOptions = {}) {
     options: {}
   }
   allyOptions = Object.assign({}, defaultAllyOptions, allyOptions)
-  const {fields, mapStateToProps, mapDispatchToProps, mergeProps, options} = allyOptions
+  const {fields: initialFields, mapStateToProps, mapDispatchToProps, mergeProps, options} = allyOptions
+  let fields;
+  if (typeof initialFields === 'function') {
+    fields = initialFields()
+    invariant(isPlainObject(fields),
+        'Using a function for the fields option in ally requires you to return a plain object.')
+  } else {
+    fields = initialFields;
+  }
   const hasAllyFields = typeof fields === 'object'
       && fields && Object.keys(fields).length > 0
   const shouldSubscribe = Boolean(mapStateToProps || hasAllyFields)
